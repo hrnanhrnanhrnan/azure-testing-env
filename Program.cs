@@ -3,7 +3,7 @@ var app = builder.Build();
 
 var users = new List<User> { new(Guid.NewGuid(), "Robin"), new (Guid.NewGuid(), "Stefan") };
 
-app.MapGet("/", () => """
+app.MapGet("/", () => Results.Content("""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +34,7 @@ app.MapGet("/", () => """
     </div>
 </body>
 </html>
-""");
+""", "text/html"));
 app.MapGet("/users", (string? query) => query is not null ? users.Where(x => x.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase)) : users);
 
 app.Run();
