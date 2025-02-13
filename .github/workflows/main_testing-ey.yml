@@ -63,6 +63,6 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'testing-ey'
-          slot-name: 'staging'
+          slot-name: 'Production'
           package: .
           
