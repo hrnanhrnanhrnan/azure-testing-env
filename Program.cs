@@ -9,9 +9,16 @@ var keyVaultUri = new Uri(builder.Configuration["AzureKeyVault:Uri"]!);
 var credential = new DefaultAzureCredential();
 
 builder.Configuration.AddAzureKeyVault(keyVaultUri, credential);
-builder.Services.AddLogging();
 
 var applicationInsightsConnectionString = builder.Configuration["ApplicationInsights"];
+
+builder.Logging.AddOpenTelemetry(o => 
+{
+    o.AddAzureMonitorLogExporter(options => 
+    {
+        options.ConnectionString = applicationInsightsConnectionString;
+    });
+});
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(t => 
@@ -102,11 +109,6 @@ app.MapGet("/", () => Results.Content("""
 </body>
 </html>
 """, "text/html"));
-app.Use(async (context, next) =>
-{
-    Console.WriteLine($"Request: {context.Request.Path}");
-    await next();
-});
 
 app.MapGet("/users", (string? query, [FromServices]ILogger<Program> logger, HttpContext context) => 
 {
