@@ -1,4 +1,34 @@
+using Azure.Identity;
+using Azure.Monitor.OpenTelemetry.Exporter;
+using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
 var builder = WebApplication.CreateBuilder(args);
+var keyVaultUri = new Uri(builder.Configuration["AzureKeyVault:Uri"]!);
+
+builder.Configuration.AddAzureKeyVault(keyVaultUri, new DefaultAzureCredential());
+builder.Services.AddLogging();
+
+var applicationInsightsConnectionString = builder.Configuration["ApplicationInsights"];
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(t => 
+        t.AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddAzureMonitorTraceExporter(o => 
+            {
+                o.ConnectionString = applicationInsightsConnectionString;
+            })
+    )
+    .WithMetrics(m => 
+        m.AddAspNetCoreInstrumentation()
+        .AddAzureMonitorMetricExporter(o => 
+        {
+            o.ConnectionString = applicationInsightsConnectionString;
+        })
+    );
+
 var app = builder.Build();
 
 var users = new List<User> { 
@@ -54,7 +84,7 @@ app.MapGet("/", () => Results.Content("""
         </h1>
         <input type="text" name="query"
             hx-get="/users"
-            hx-trigger="keyup changed delay:500ms"
+            hx-trigger="keyup changed delay:250ms"
             hx-target="#search-results"
             placeholder="Search...">
         <div id="search-results"></div>
@@ -63,8 +93,9 @@ app.MapGet("/", () => Results.Content("""
 </html>
 """, "text/html"));
 
-app.MapGet("/users", (string? query) => 
+app.MapGet("/users", (string? query, [FromServices]ILogger<Program> logger, HttpContext context) => 
 {
+    logger.LogInformation("Hit the users endpoint with query: '{Query}' from IP: '{IP}'", query, context.Connection.RemoteIpAddress);
     if (string.IsNullOrWhiteSpace(query) 
         || query.Length == 0)
     {
@@ -73,11 +104,17 @@ app.MapGet("/users", (string? query) =>
 
     var results = users.FindAll(user => user.Name.Contains(query, StringComparison.InvariantCultureIgnoreCase));
 
-    return results.Count == 0
-        ? ""
-        : $$"""
-            {{string.Join("\n", results.Select(TurnUserIntoHtml))}}
-        """;
+    if (results.Count == 0)
+    {
+        logger.LogInformation("Query {Query} resulted in 0 users", query);
+        return "";
+    }
+
+    logger.LogInformation("Query {Query} resulted in {Count} users", query, results.Count);
+
+    return $$"""
+        {{string.Join("\n", results.Select(TurnUserIntoHtml))}}
+    """;
 });
 
 static string TurnUserIntoHtml(User user)

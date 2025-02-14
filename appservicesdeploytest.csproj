@@ -6,4 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
+    <PackageReference Include="Azure.Identity" Version="1.13.2" />
+    <PackageReference Include="azure.monitor.opentelemetry.aspnetcore" Version="1.2.0" />
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
+  </ItemGroup>
+
 </Project>
