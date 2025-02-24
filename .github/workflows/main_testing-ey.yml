@@ -58,11 +58,8 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_21D5165C8F4B4725AA336F16CE8D604E }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_ADFF37C626F54B9B83611CAECA24D609 }}
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'testing-ey'
-          slot-name: 'Production'
-          package: .
+      - name: Build and push to ACR
+        run: |
+          az acr login --name chatting
+          az acr build --image usersearcher:v1 --registry chatting.azurecr.io --file Dockerfile .
           
