@@ -15,7 +15,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_468D1F5FD34649B89EED3574A94FAF25 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_21D5165C8F4B4725AA336F16CE8D604E }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_ADFF37C626F54B9B83611CAECA24D609 }}
 
       - name: Build and push to ACR
         run: |
